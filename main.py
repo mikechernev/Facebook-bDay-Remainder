@@ -144,7 +144,7 @@ class Birthdays(webapp2.RequestHandler):
         facebook_data = json.loads(url.content)
         message = mail.EmailMessage(sender="Bithdays Update<birtdayreminder-info@mikechernev.com>",
                                     subject="Your birthday fellas")
-        message.to = "mike.chernev@gmail.com"
+        message.to = email
         try:
             facebook_data['data']
         except:
