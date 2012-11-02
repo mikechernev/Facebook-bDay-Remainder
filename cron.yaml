@@ -1,0 +1,4 @@
+cron:
+- description: daily email with birthdays
+  url: /birthdays
+  schedule: every day 05:00

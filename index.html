@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Birthday Reminder</title>
+
+		<link rel='stylesheet' type="text/css" href='css/reset.css'>
+		
+		<script src="js/jquery.js"></script>
+		<script>
+			centerLogin = function(){
+				var win_width = $(window).width();
+				var win_height = $(window).height();
+				var left = (win_width-200)/2;
+				var top = (win_height-85)/2;
+				$("#fb_login").css({"left": left, "top": top});
+			}
+			
+			animateLoginButton = function(){
+				$("#fb_login").animate({
+					left: $(window).width() - 210,
+				    top: 10
+				  }, 2000);
+			}
+			
+			ajaxCall = function(){
+				$.post("/ajax", function(response){
+					$("#info").html(response);
+				});
+			};
+			
+			$(function (){
+				FB.getLoginStatus(function(response) {
+					if (response.status === 'connected') {
+						ajaxCall();
+						$("#fb_login").css({"right": 10, "top": 10});
+					} else {
+						centerLogin();
+					}
+					
+				});
+				
+				$(window).resize(function(){
+					$("#fb_login").css({"right": 10, "top": 10});
+				});
+			});
+		</script>
+		<style>
+			#fb_login
+			{
+				position: absolute;
+			}
+		</style>
+		
+	</head>
+	<body>
+		<div id="info"></div>
+		<fb:login-button id="fb_login" autologoutlink="true" scope="{{ scope }}" data-show-faces="true" data-width="200" data-max-rows="1">Login with facebook</fb:login-button>
+
+		<div id="fb-root"></div>
+		<script src="//connect.facebook.net/en_US/all.js"></script>
+		<script>
+			window.fbAsyncInit = function() {
+				FB.init({
+					appId      : "{{ appId }}",
+					channelUrl : "{{ myUrl }}", 
+					status     : true,
+					cookie     : true,
+					xfbml      : true
+				});
+				FB.Event.subscribe('auth.login', function () {
+					ajaxCall();
+					animateLoginButton();
+				});			
+				FB.Event.subscribe('auth.logout', function () {
+					window.location = "/";
+				});			
+			}
+			(function(d, s, id) {
+				var js, fjs = d.getElementsByTagName(s)[0];
+				if (d.getElementById(id)) return;
+				js = d.createElement(s); js.id = id, js.async = true;
+				js.src = "//connect.facebook.net/en_GB/all.js";
+				fjs.parentNode.insertBefore(js, fjs);
+			}(document, 'script', 'facebook-jssdk'));			
+		</script>
+	</body>
+</html>
