@@ -140,7 +140,7 @@ class Birthdays(webapp2.RequestHandler):
         email = self.request.get("email")
         url = urlfetch.fetch("https://graph.facebook.com/me/friends?access_token=" + access_token, method=urlfetch.GET, deadline=20)
         facebook_data = json.loads(url.content)
-        message = mail.EmailMessage(sender="Bithdays Update<mike@mikechernev.com>",
+        message = mail.EmailMessage(sender="Bithdays Update<birtdayreminder-info@mikechernev.com>",
                                     subject="Your birthday fellas")
         message.to = email
         try:
