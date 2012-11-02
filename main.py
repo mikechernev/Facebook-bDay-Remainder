@@ -46,22 +46,22 @@ class AjaxCall(webapp2.RequestHandler):
     def post(self):
         fb_user = facebook.get_user_from_cookie(self.request.cookies, APP_ID, APP_SECRET)
         if fb_user:
-            access_token = fb_user["access_token"]
+            access_token = fb_user['access_token']
             url = urlfetch.fetch("https://graph.facebook.com/me?access_token=" + access_token, method=urlfetch.GET, deadline=20)
             profile = json.loads(url.content)
-            self.response.out.write("Welcome " + profile["name"])
+            self.response.out.write("Welcome " + profile['name'])
             query = Users.all()
             query.filter("accessToken = ", access_token)
             if query.get():
                 pass
             else:
                 user = Users()
-                user.facebookID = profile["id"]
-                user.email = db.Email(profile["email"])
+                user.facebookID = profile['id']
+                user.email = db.Email(profile['email'])
                 user.accessToken = access_token
                 user.put()
                 self.response.out.write("<br>You are now added to the database")
-                taskqueue.add(url='/birthdays', params={"email": profile["email"], "access_token": access_token})
+                taskqueue.add(url='/birthdays', params={"email": profile['email'], "access_token": access_token})
 
 class ProcessUsers(webapp2.RequestHandler):
     def get(self):
@@ -72,7 +72,7 @@ class ProcessUsers(webapp2.RequestHandler):
             for user in users:
 #        fb_user = facebook.get_user_from_cookie(self.request.cookies, APP_ID, APP_SECRET)
 #        if fb_user:
-#        access_token = fb_user["access_token"]
+#        access_token = fb_user['access_token']
 #                access_token = "AAAFgBAs8K8YBAGgNcgyoZCJVDcj5ZBPVM3ZBmR3XkTgDsCeUSzdlU4NUb6ZAo2o6WE0jZBz8399hBL2TzYlXW8Hv3BKZCWahwZD"
                 taskqueue.add(url='/processUsers', params={"access_token": user.accessToken})
         
@@ -81,34 +81,34 @@ class ProcessUsers(webapp2.RequestHandler):
         url = urlfetch.fetch("https://graph.facebook.com/me/friends?access_token=" + access_token, method=urlfetch.GET, deadline=20)
         facebook_data = json.loads(url.content)
         try:
-            facebook_data["data"]
+            facebook_data['data']
         except:
             try:
-                facebook_data["error"]
+                facebook_data['error']
             except:
                 pass
             else:
-                if facebook_data["error"]["code"] == 190 and facebook_data["error"]["error_subcode"] == 463:
+                if facebook_data['error']['code'] == 190 and facebook_data['error']['error_subcode'] == 463:
                     pass
                 else:
                     pass
             logging.info(facebook_data)
         else:
-            for friend in facebook_data["data"]:
-                if AllUsers.all().filter("facebookID = ", friend["id"]).get():
+            for friend in facebook_data['data']:
+                if AllUsers.all().filter("facebookID = ", friend['id']).get():
                     pass
                 else:
-                    url = urlfetch.fetch("https://graph.facebook.com/" + friend["id"] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
+                    url = urlfetch.fetch("https://graph.facebook.com/" + friend['id'] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
                     friend_info = json.loads(url.content)
                     user = AllUsers()
                     try:
-                        friend_info["birthday"]
+                        friend_info['birthday']
                     except:
                         pass
                     else:
-                        user.facebookID = friend_info["id"]
-                        user.name = friend_info["name"]
-                        user.birthday = int(friend_info["birthday"][:2]+friend_info["birthday"][3:5])
+                        user.facebookID = friend_info['id']
+                        user.name = friend_info['name']
+                        user.birthday = int(friend_info['birthday'][:2]+friend_info['birthday'][3:5])
                         user.put()
         
 
@@ -138,13 +138,15 @@ class Birthdays(webapp2.RequestHandler):
 
     def post(self):        access_token = self.request.get("access_token")
         email = self.request.get("email")
+        url = urlfetch.fetch("https://graph.facebook.com/me?access_token=" + access_token, method=urlfetch.GET, deadline=20)
+        user_data = json.loads(url.content)
         url = urlfetch.fetch("https://graph.facebook.com/me/friends?access_token=" + access_token, method=urlfetch.GET, deadline=20)
         facebook_data = json.loads(url.content)
         message = mail.EmailMessage(sender="Bithdays Update<birtdayreminder-info@mikechernev.com>",
                                     subject="Your birthday fellas")
-        message.to = email
+        message.to = "mike.chernev@gmail.com"
         try:
-            facebook_data["data"]
+            facebook_data['data']
         except:
             message.body = """
             Hi there,
@@ -152,11 +154,11 @@ class Birthdays(webapp2.RequestHandler):
             
             """
             try:
-                facebook_data["error"]
+                facebook_data['error']
             except:
                 message.body += "We'll try to resolve it as soon as possible"
             else:
-                if facebook_data["error"]["code"] == 190 and facebook_data["error"]["error_subcode"] == 463:
+                if facebook_data['error']['code'] == 190 and facebook_data['error']['error_subcode'] == 463:
                     message.body += "Your access token is invalid. In order to use the Birthday reminder you will have to subscribe again"
                 else:
                     message.body += "We'll try to resolve it as soon as possible"
@@ -167,30 +169,33 @@ class Birthdays(webapp2.RequestHandler):
             db.delete(user)
             logging.info("User with email - " + email + " deleted")
         else:
+            url = urlfetch.fetch("https://graph.facebook.com/me?access_token=" + access_token, method=urlfetch.GET, deadline=20)
+            user_data = json.loads(url.content)
             birthday_list = ""
             birtday_list_html = ""
             now = datetime.datetime.now()
             current_date = now.strftime("%m/%d")
             message.body = "Hi there,\n"
-            message.html ='<h3 style="color: #2da3bd; margin:0; padding:0">Birthdays Today</h3>'
+            message.html ='<h4 style="color: ##20a050; margin:0; padding:0">Hi there '+user_data['name']+'</h4>'
+            message.html +='<h3 style="color: #2da3bd; margin:0; padding:0">Birthdays Today</h3>'
             
-            for friend in facebook_data["data"]:
-                url = urlfetch.fetch("https://graph.facebook.com/" + friend["id"] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
+            for friend in facebook_data['data']:
+                url = urlfetch.fetch("https://graph.facebook.com/" + friend['id'] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
                 friend_info = json.loads(url.content)
                 try:
-                    friend_info["birthday"]
+                    friend_info['birthday']
                 except:
                     pass
                 else:
-                    birthday = friend_info["birthday"][:5]
+                    birthday = friend_info['birthday'][:5]
                     if birthday == current_date:
-                        birthday_list += friend_info["name"] + " - Bday: " + friend_info["birthday"] + "\n"
-                        birthday_list += "Write on " + friend_info["first_name"] + "'s wall -" + friend_info["link"] + "\n\n"
+                        birthday_list += friend_info['name'] + " - Bday: " + friend_info['birthday'] + "\n"
+                        birthday_list += "Write on " + friend_info['first_name'] + "'s wall -" + friend_info['link'] + "\n\n"
                         birtday_list_html += '<div style="background: #e6e6e6; margin-top: 10px; color: #2b81c5; position: relative; padding: 10px; width: 300px; overflow: hidden;">'
                         birtday_list_html += '<img style="margin-left:auto; margin-right:auto; float:left; height:60px; width:auto;" src="https://graph.facebook.com/'+friend_info['id']+'/picture">'
                         birtday_list_html += '<div style="float: left; margin-left: 10px; margin-top:10px">'
-                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;">'+friend_info["name"]+'</p>'
-                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info["link"]+'" style="color: #8e8e8e; text-decoration: none;">Write on '+friend_info["first_name"]+'\'s wall</a></p>'
+                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;">'+friend_info['name']+'</p>'
+                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info['link']+'" style="color: #8e8e8e; text-decoration: none;">Write on '+friend_info['first_name']+'\'s wall</a></p>'
                         birtday_list_html += '</div></div>'
             if birthday_list != "":
                 message.body += "Today the people with birthdays are:\n\n" + birthday_list
@@ -221,7 +226,7 @@ class Mike(webapp2.RequestHandler):
                                     subject="Your birthday fellas")
         message.to = "mike@mikechernev.com"
         try:
-            facebook_data["data"]
+            facebook_data['data']
         except:
             message.body = """
             Hi there,
@@ -229,11 +234,11 @@ class Mike(webapp2.RequestHandler):
             
             """
             try:
-                facebook_data["error"]
+                facebook_data['error']
             except:
                 message.body += "We'll try to resolve it as soon as possible"
             else:
-                if facebook_data["error"]["code"] == 190 and facebook_data["error"]["error_subcode"] == 463:
+                if facebook_data['error']['code'] == 190 and facebook_data['error']['error_subcode'] == 463:
                     message.body += "Your access token is invalid. In order to use the Birthday reminder you will have to subscribe again"
                 else:
                     message.body += "We'll try to resolve it as soon as possible"
@@ -246,21 +251,21 @@ class Mike(webapp2.RequestHandler):
             birtday_list_html = ""
             message.html ='<h3 style="color: #2da3bd; margin:0; padding:0">Birthdays Today</h3>'
             
-            for friend in facebook_data["data"]:
-                url = urlfetch.fetch("https://graph.facebook.com/" + friend["id"] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
+            for friend in facebook_data['data']:
+                url = urlfetch.fetch("https://graph.facebook.com/" + friend['id'] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
                 friend_info = json.loads(url.content)
                 try:
-                    friend_info["birthday"]
+                    friend_info['birthday']
                 except:
                     pass
                 else:
-                    birthday_list += friend_info["name"] + " - Bday: " + friend_info["birthday"] + "\n"
-                    birthday_list += "Write on " + friend_info["first_name"] + "'s wall -" + friend_info["link"] + "\n\n"
+                    birthday_list += friend_info['name'] + " - Bday: " + friend_info['birthday'] + "\n"
+                    birthday_list += "Write on " + friend_info['first_name'] + "'s wall -" + friend_info['link'] + "\n\n"
                     birtday_list_html += '<div style="background: #e6e6e6; margin-top: 10px; color: #2b81c5; position: relative; padding: 10px; width: 300px; overflow: hidden;">'
                     birtday_list_html += '<img style="margin-left:auto; margin-right:auto; float:left; height:60px; width:auto;" src="https://graph.facebook.com/'+friend_info['id']+'/picture">'
                     birtday_list_html += '<div style="float: left; margin-left: 10px; margin-top:10px">'
-                    birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;">'+friend_info["name"]+'</p>'
-                    birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info["link"]+'" style="color: #8e8e8e; text-decoration: none;">Write on '+friend_info["first_name"]+'\'s wall</a></p>'
+                    birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;">'+friend_info['name']+'</p>'
+                    birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info['link']+'" style="color: #8e8e8e; text-decoration: none;">Write on '+friend_info['first_name']+'\'s wall</a></p>'
                     birtday_list_html += '</div></div>'
             if birthday_list != "":
                 message.body += birthday_list
