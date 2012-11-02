@@ -176,7 +176,7 @@ class Birthdays(webapp2.RequestHandler):
             now = datetime.datetime.now()
             current_date = now.strftime("%m/%d")
             message.body = "Hi there,\n"
-            message.html ='<h4 style="color: ##20a050; margin:0; padding:0">Hi there '+user_data['name']+'</h4>'
+            message.html ='<h4 style="color: #20a050; margin:0; padding:0">Hi there '+user_data['name']+'</h4>'
             message.html +='<h3 style="color: #2da3bd; margin:0; padding:0">Birthdays Today</h3>'
             
             for friend in facebook_data['data']:
@@ -222,7 +222,7 @@ class Mike(webapp2.RequestHandler):
         email = self.request.get("email")
         url = urlfetch.fetch("https://graph.facebook.com/me/friends?access_token=" + access_token, method=urlfetch.GET, deadline=20)
         facebook_data = json.loads(url.content)
-        message = mail.EmailMessage(sender="Bithdays Update<mike@mikechernev.com>",
+        message = mail.EmailMessage(sender="Bithdays Update<birtdayreminder-info@mikechernev.com>",
                                     subject="Your birthday fellas")
         message.to = "mike@mikechernev.com"
         try:
@@ -246,10 +246,13 @@ class Mike(webapp2.RequestHandler):
             message.send()
             logging.info("Message sent to " + str(email))
         else:
+            url = urlfetch.fetch("https://graph.facebook.com/me?access_token=" + access_token, method=urlfetch.GET, deadline=20)
+            user_data = json.loads(url.content)
             birthday_list = ""
             message.body = "Hi there,\n"
             birtday_list_html = ""
-            message.html ='<h3 style="color: #2da3bd; margin:0; padding:0">Birthdays Today</h3>'
+            message.html ='<h4 style="color: #20a050; margin:0; padding:0">Hi there '+user_data['name']+'</h4>'
+            message.html +='<h3 style="color: #2da3bd; margin:0; padding:0">Birthdays Today</h3>'
             
             for friend in facebook_data['data']:
                 url = urlfetch.fetch("https://graph.facebook.com/" + friend['id'] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
