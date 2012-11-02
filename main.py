@@ -168,9 +168,11 @@ class Birthdays(webapp2.RequestHandler):
             logging.info("User with email - " + email + " deleted")
         else:
             birthday_list = ""
+            birtday_list_html = ""
             now = datetime.datetime.now()
             current_date = now.strftime("%m/%d")
             message.body = "Hi there,\n"
+            message.html ='<h3 style="color: #2da3bd; margin:0; padding:0">Birthdays Today</h3>'
             
             for friend in facebook_data["data"]:
                 url = urlfetch.fetch("https://graph.facebook.com/" + friend["id"] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
@@ -184,8 +186,15 @@ class Birthdays(webapp2.RequestHandler):
                     if birthday == current_date:
                         birthday_list += friend_info["name"] + " - Bday: " + friend_info["birthday"] + "\n"
                         birthday_list += "Write on " + friend_info["first_name"] + "'s wall -" + friend_info["link"] + "\n\n"
+                        birtday_list_html += '<div style="background: #e6e6e6; margin-top: 10px; color: #2b81c5; position: relative; padding: 10px; width: 300px; overflow: hidden;">'
+                        birtday_list_html += '<img style="margin-left:auto; margin-right:auto; float:left; height:60px; width:auto;" src="https://graph.facebook.com/'+friend_info['id']+'/picture">'
+                        birtday_list_html += '<div style="float: left; margin-left: 10px; margin-top:10px">'
+                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;">'+friend_info["name"]+'</p>'
+                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info["link"]+'" style="color: #8e8e8e; text-decoration: none;">Write on '+friend_info["first_name"]+'\'s wall</a></p>'
+                        birtday_list_html += '</div></div>'
             if birthday_list != "":
                 message.body += "Today the people with birthdays are:\n\n" + birthday_list
+                message.html += birtday_list_html
                 message.send()
                 logging.info("Message sent to " + str(email))
 
@@ -234,6 +243,8 @@ class Mike(webapp2.RequestHandler):
         else:
             birthday_list = ""
             message.body = "Hi there,\n"
+            birtday_list_html = ""
+            message.html ='<h3 style="color: #2da3bd; margin:0; padding:0">Birthdays Today</h3>'
             
             for friend in facebook_data["data"]:
                 url = urlfetch.fetch("https://graph.facebook.com/" + friend["id"] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
@@ -242,11 +253,18 @@ class Mike(webapp2.RequestHandler):
                     friend_info["birthday"]
                 except:
                     pass
-                    birthday_list += friend_info["name"] + "\n"
                 else:
                     birthday_list += friend_info["name"] + " - Bday: " + friend_info["birthday"] + "\n"
+                    birthday_list += "Write on " + friend_info["first_name"] + "'s wall -" + friend_info["link"] + "\n\n"
+                    birtday_list_html += '<div style="background: #e6e6e6; margin-top: 10px; color: #2b81c5; position: relative; padding: 10px; width: 300px; overflow: hidden;">'
+                    birtday_list_html += '<img style="margin-left:auto; margin-right:auto; float:left; height:60px; width:auto;" src="https://graph.facebook.com/'+friend_info['id']+'/picture">'
+                    birtday_list_html += '<div style="float: left; margin-left: 10px; margin-top:10px">'
+                    birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;">'+friend_info["name"]+'</p>'
+                    birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info["link"]+'" style="color: #8e8e8e; text-decoration: none;">Write on '+friend_info["first_name"]+'\'s wall</a></p>'
+                    birtday_list_html += '</div></div>'
             if birthday_list != "":
                 message.body += birthday_list
+                message.html += birtday_list_html
                 message.send()
                 logging.info("Message sent to " + str(email))
 
