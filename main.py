@@ -142,7 +142,7 @@ class Birthdays(webapp2.RequestHandler):
         user_data = json.loads(url.content)
         url = urlfetch.fetch("https://graph.facebook.com/me/friends?access_token=" + access_token, method=urlfetch.GET, deadline=20)
         facebook_data = json.loads(url.content)
-        message = mail.EmailMessage(sender="Bithdays Update<birtdayreminder-info@mikechernev.com>",
+        message = mail.EmailMessage(sender="Birthdays Update<birtdayreminder-info@mikechernev.com>",
                                     subject="Your birthday fellas")
         message.to = email
         try:
@@ -176,8 +176,8 @@ class Birthdays(webapp2.RequestHandler):
             now = datetime.datetime.now()
             current_date = now.strftime("%m/%d")
             message.body = "Hi there,\n"
-            message.html ='<h4 style="color: #20a050; margin:0; padding:0">Hi there '+user_data['name']+'</h4>'
-            message.html +='<h3 style="color: #2da3bd; margin:0; padding:0">Birthdays Today</h3>'
+            message.html ='<h3 style="margin:0; padding:0; font-weight:100">Hello '+user_data['name']+',</h4>'
+            message.html +='<h4 style="color: #2da3bd; margin:10px 0; padding:0">Birthdays Today</h3>'
             
             for friend in facebook_data['data']:
                 url = urlfetch.fetch("https://graph.facebook.com/" + friend['id'] + "?access_token=" + access_token, method=urlfetch.GET, deadline=20)
@@ -195,7 +195,7 @@ class Birthdays(webapp2.RequestHandler):
                         birtday_list_html += '<img style="margin-left:auto; margin-right:auto; float:left; height:60px; width:auto;" src="https://graph.facebook.com/'+friend_info['id']+'/picture">'
                         birtday_list_html += '<div style="float: left; margin-left: 10px; margin-top:10px">'
                         birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;">'+friend_info['name']+'</p>'
-                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info['link']+'" style="color: #8e8e8e; text-decoration: none;">Write on '+friend_info['first_name']+'\'s wall</a></p>'
+                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info['link']+'" style="color: #8e8e8e;">Write on '+friend_info['first_name']+'\'s wall</a></p>'
                         birtday_list_html += '</div></div>'
             if birthday_list != "":
                 message.body += "Today the people with birthdays are:\n\n" + birthday_list
@@ -224,7 +224,7 @@ class Mike(webapp2.RequestHandler):
         facebook_data = json.loads(url.content)
         message = mail.EmailMessage(sender="Bithdays Update<birtdayreminder-info@mikechernev.com>",
                                     subject="Your birthday fellas")
-        message.to = "mike@mikechernev.com"
+        message.to = "mike.chernev@gmail.com"
         try:
             facebook_data['data']
         except:
@@ -248,6 +248,7 @@ class Mike(webapp2.RequestHandler):
         else:
             url = urlfetch.fetch("https://graph.facebook.com/me?access_token=" + access_token, method=urlfetch.GET, deadline=20)
             user_data = json.loads(url.content)
+            current_date = datetime.datetime.now().strftime("%m/%d")
             birthday_list = ""
             message.body = "Hi there,\n"
             birtday_list_html = ""
@@ -262,14 +263,23 @@ class Mike(webapp2.RequestHandler):
                 except:
                     pass
                 else:
-                    birthday_list += friend_info['name'] + " - Bday: " + friend_info['birthday'] + "\n"
-                    birthday_list += "Write on " + friend_info['first_name'] + "'s wall -" + friend_info['link'] + "\n\n"
-                    birtday_list_html += '<div style="background: #e6e6e6; margin-top: 10px; color: #2b81c5; position: relative; padding: 10px; width: 300px; overflow: hidden;">'
-                    birtday_list_html += '<img style="margin-left:auto; margin-right:auto; float:left; height:60px; width:auto;" src="https://graph.facebook.com/'+friend_info['id']+'/picture">'
-                    birtday_list_html += '<div style="float: left; margin-left: 10px; margin-top:10px">'
-                    birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;">'+friend_info['name']+'</p>'
-                    birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info['link']+'" style="color: #8e8e8e; text-decoration: none;">Write on '+friend_info['first_name']+'\'s wall</a></p>'
-                    birtday_list_html += '</div></div>'
+                    birthday = friend_info['birthday'][:5]
+                    if birthday == current_date:
+                        picture = urlfetch.fetch("https://graph.facebook.com/"+friend_info['id']+"/picture", method=urlfetch.GET, deadline=20)
+                        try:
+                            message.attachments
+                        except:
+                            message.attachments = [(friend_info['id']+".jpg", picture.content)]
+                        else:
+                            message.attachments.append((friend_info['id']+".jpg", picture.content))
+                        birthday_list += friend_info['name'] + " - Bday: " + friend_info['birthday'] + "\n"
+                        birthday_list += "Write on " + friend_info['first_name'] + "'s wall -" + friend_info['link'] + "\n\n"
+                        birtday_list_html += '<div style="background: #e6e6e6; margin-top: 10px; color: #2b81c5; position: relative; padding: 10px; width: 300px; overflow: hidden;">'
+                        birtday_list_html += '<img style="margin-left:auto; margin-right:auto; float:left; height:60px; width:auto;" src="cid:'+friend_info['id']+'.jpg">'
+                        birtday_list_html += '<div style="float: left; margin-left: 10px; margin-top:10px">'
+                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;">'+friend_info['name']+'</p>'
+                        birtday_list_html += '<p style="margin: 0; padding: 0; font-size:16px; font-family: Times New Romman serif;"><a href="'+friend_info['link']+'" style="color: #8e8e8e; text-decoration: none;">Write on '+friend_info['first_name']+'\'s wall</a></p>'
+                        birtday_list_html += '</div></div>'
             if birthday_list != "":
                 message.body += birthday_list
                 message.html += birtday_list_html
